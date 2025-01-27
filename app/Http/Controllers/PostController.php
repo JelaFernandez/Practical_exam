@@ -11,15 +11,8 @@ class PostController extends Controller
 {
     public function index()
     {   
-        $posts = Post::where('user_id', Auth::id())->get();
-        return view('posts.index', compact('posts'));if (Auth::check()) {
-           
-            $posts = Post::where('user_id', Auth::id())->get();
-            return view('posts.index', compact('posts'));
-        } else {
-            // Redirect to login if not authenticated
-            return redirect()->route('login');
-        }
+        $posts = Post::all();
+        return view('posts.index', compact('posts'));
     }
 
     public function create()
@@ -29,29 +22,45 @@ class PostController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
+        // Validate user input
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'body' => 'required',
         ]);
 
-        Post::create([
-            'title' => $request->title,
-            'body' => $request->body,
-            'user_id' => Auth::id(),
-        ]);
+        // Create new post from user input
+        $post = new Post();
+        $post->title = $request->title;
+        $post->body = $request->body;
+        $post->user_id = Auth::id(); 
+        $post->save();
 
-        return redirect()->route('posts.index');
+        return redirect()->route('posts.index')->with('success', 'Post created successfully!');
+    }
+
+    public function show(Post $post)
+    {
+        return view('posts.show', compact('post'));
     }
 
     public function edit(Post $post)
     {
-        $this->authorize('update', $post);
+        // Check if the authenticated user is the owner of the post
+        if ($post->user_id !== Auth::id()) {
+            return redirect()->route('posts.index')->with('error', 'You are not authorized to edit this post.');
+        }
+
         return view('posts.edit', compact('post'));
     }
 
     public function update(Request $request, Post $post)
     {
-        $this->authorize('update', $post);
+        // Check if the authenticated user is the owner of the post
+        if ($post->user_id !== Auth::id()) {
+            return redirect()->route('posts.index')->with('error', 'You are not authorized to update this post.');
+        }
+
+        // $this->authorize('update', $post);
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -65,10 +74,15 @@ class PostController extends Controller
 
     public function destroy(Post $post)
     {
-        $this->authorize('delete', $post);
-
+        // Check if the post belongs to the logged-in user
+        if ($post->user_id != Auth::id()) {
+        return redirect()->route('posts.index')->with('error', 'You are not authorized to delete this post');
+    }
+    
+        // Delete the post
         $post->delete();
 
-        return redirect()->route('posts.index');
+        // Redirect back with a success message
+        return redirect()->route('posts.index')->with('success', 'Post deleted successfully');
     }
 }

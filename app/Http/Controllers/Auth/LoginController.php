@@ -16,13 +16,18 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
+
         if(Auth::attempt($credentials))
         {
-            return redirect()->route('post.index');
+            return redirect()->route('posts.index');
         }
+        else
+        {
+            return back()->withErrors([
+                'email' => 'Invalid credentials.'
+            ]);
 
-        return back()->withErrors(['email' => 'Invalid credentials']);
-
+        }
     }
 
     public function logout()

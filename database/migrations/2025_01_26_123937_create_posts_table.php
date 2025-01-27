@@ -12,13 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('posts', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->text('body');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
+            $table->id();  // Post ID (auto-increment)
+            $table->string('title');  // Post title
+            $table->text('body');  // Post body/content
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');  // Foreign key referencing users
+            $table->timestamps();  // created_at and updated_at
         });
     }
+
+    
 
     /**
      * Reverse the migrations.
